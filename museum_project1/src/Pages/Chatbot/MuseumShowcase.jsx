@@ -32,7 +32,7 @@ const MuseumShowcase = () => {
         <p>Loading museums...</p>
       ) : (
         <>
-          <p>Debug: Museums count - {museums.length}</p> {/* Debugging log on UI */}
+          {/* Debugging log on UI */}
           {museums.length === 0 ? (
             <p>No museums available.</p>
           ) : (

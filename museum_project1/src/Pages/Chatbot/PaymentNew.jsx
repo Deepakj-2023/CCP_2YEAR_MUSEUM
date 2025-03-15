@@ -110,9 +110,13 @@
 // };
 
 // export default PaymentNew;
+
+
+/////  next ui desing code 
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "./paymentNew.css"; // Import the CSS file
 
 const PaymentNew = () => {
   const location = useLocation();
@@ -120,7 +124,7 @@ const PaymentNew = () => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [formData, setFormData] = useState({
     email: "",
-    transactionId: ""
+    transactionId: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -144,9 +148,9 @@ const PaymentNew = () => {
         const response = await axios.get("http://localhost:8000/pay_details", {
           params: {
             museum_id: parseInt(museumId),
-            no_of_tickets: parseInt(tickets)
+            no_of_tickets: parseInt(tickets),
           },
-          cancelToken: new axios.CancelToken(c => (cancel = c))
+          cancelToken: new axios.CancelToken((c) => (cancel = c)),
         });
 
         if (isMounted) {
@@ -175,8 +179,8 @@ const PaymentNew = () => {
       const response = await axios.post("http://localhost:8000/confirm_booking", {
         museum_id: paymentDetails.museum_id,
         tickets: paymentDetails.tickets,
-        user_upi: formData.transactionId,  // Change `upi_id` to `user_upi`
-        email: formData.email  // Change `user_email` to `email`
+        user_upi: formData.transactionId,
+        email: formData.email,
       });
 
       // Redirect to success page with booking details
@@ -203,34 +207,41 @@ const PaymentNew = () => {
 
   return (
     <div className="payment-container">
-      <h2>Payment for {paymentDetails.museum_name}</h2>
-      <div className="payment-instructions">
-        <p>Send ₹{paymentDetails.total_price} to:</p>
-        <div className="upi-details">
-          <h3>{paymentDetails.upi_id}</h3>
-          <p className="note">(Use any UPI app to complete payment)</p>
+      <div className="payment-box">
+        <h2>Payment for {paymentDetails.museum_name}</h2>
+        <div className="payment-instructions">
+          <p>Total Amount: ₹{paymentDetails.total_price}</p>
+          <p>Admin UPI ID: {paymentDetails.upi_id}</p>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="payment-form">
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Enter UPI Transaction ID"
-          value={formData.transactionId}
-          onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
-          required
-        />
-        <button type="submit" className="confirm-button">
-          Confirm Payment
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="payment-form">
+          <div className="form-group">
+            <label htmlFor="email">EMAIL</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="transactionId">UPI ID</label>
+            <input
+              type="text"
+              id="transactionId"
+              placeholder="Enter your UPI ID"
+              value={formData.transactionId}
+              onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
+              required
+            />
+          </div>
+          <button type="submit" className="confirm-button">
+            Payment
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

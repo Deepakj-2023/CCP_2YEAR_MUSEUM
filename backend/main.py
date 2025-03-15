@@ -386,7 +386,12 @@ import smtplib
 from email.mime.text import MIMEText
 import google.generativeai as genai
 from dotenv import load_dotenv
+from fastapi import FastAPI
+from museumshowcase import app as museum_app
+app = FastAPI()
 
+# Mount the museum showcase API
+app.mount("/museumshowcase", museum_app)
 # Load environment variables
 load_dotenv()
 

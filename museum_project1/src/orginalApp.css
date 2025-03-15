@@ -1,0 +1,144 @@
+/* General styles */
+body {
+    background-color: black;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Chat Container */
+  .chat-container {
+    background-color: #18181b;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #27272a;
+    border-radius: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Header */
+  .chat-header {
+    background-color: #27272a;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #3f3f46;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  /* Messages */
+  .chat-messages {
+    padding: 16px;
+    height: 500px;
+    overflow-y: auto;
+  }
+  
+  /* Message Bubble */
+  .message-container {
+    display: flex;
+    margin-bottom: 12px;
+  }
+  
+  .message-bubble {
+    max-width: 80%;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .bot-message {
+    background-color: #27272a;
+    color: white;
+    border: 1px solid #3f3f46;
+  }
+  
+  .user-message {
+    background-color: white;
+    color: black;
+    align-self: flex-end;
+  }
+  
+  /* Loading Animation */
+  .loading-indicator {
+    display: flex;
+    gap: 5px;
+    padding: 10px;
+    background-color: #27272a;
+    border-radius: 10px;
+    border: 1px solid #3f3f46;
+  }
+  
+  .loading-dot {
+    width: 6px;
+    height: 6px;
+    background-color: white;
+    border-radius: 50%;
+    animation: bounce 0.6s infinite alternate;
+  }
+  
+  .loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  .loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  
+  @keyframes bounce {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-5px);
+    }
+  }
+  
+  /* Footer */
+  .chat-footer {
+    border-top: 1px solid #3f3f46;
+    padding: 16px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  /* Input Box */
+  .input-box {
+    flex: 1;
+    border-radius: 8px;
+    background-color: #27272a;
+    border: 1px solid #3f3f46;
+    padding: 8px;
+    color: white;
+    outline: none;
+  }
+  
+  .input-box::placeholder {
+    color: #9ca3af;
+  }
+  
+  /* Send Button */
+  .send-button {
+    background-color: white;
+    color: black;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .send-button:hover {
+    background-color: #e5e5e5;
+  }
+  
+  .send-button:disabled {
+    background-color: #52525b;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }

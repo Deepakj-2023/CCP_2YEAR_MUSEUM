@@ -1,0 +1,43 @@
+/* Outer Container */
+.success-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #000; /* Black background */
+    padding: 2rem;
+  }
+  
+  /* Success Box */
+  .success-box {
+    background: #fff; /* White box */
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Success Title */
+  .success-title {
+    font-size: 2rem;
+    color: #2ecc71; /* Green color for success */
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Success Details */
+  .success-details {
+    text-align: left;
+    font-size: 1.1rem;
+    color: #555;
+  }
+  
+  .success-details p {
+    margin-bottom: 1rem;
+  }
+  
+  .success-details strong {
+    color: #2c3e50;
+    font-weight: bold;
+  }
