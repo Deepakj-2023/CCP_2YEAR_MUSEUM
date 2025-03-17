@@ -1,8 +1,11 @@
-/* .container {
-    margin: auto;
-    text-align: center;
+ .container {
+    background-image: url("C:\Users\Deepak\Desktop\Museum Booking System(React)\museum_project1\public\pexels-joshkjack-135018.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
   
+  /*
   .museum-list {
     display: flex;
     flex-wrap: wrap;
