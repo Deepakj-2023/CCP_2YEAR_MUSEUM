@@ -1,10 +1,11 @@
-from decimal import Decimal
 
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 # Pydantic Models
+
 class PaymentRequest(BaseModel):
-    amount: Decimal = Field(..., gt=0)
+    payment_id: str = Field(..., min_length=1)
+    amount: float = Field(..., gt=0)
     sender_upi: str = Field(..., min_length=3)
 
 
@@ -19,3 +20,5 @@ class BookingRequest(BaseModel):
     tickets: int
     user_upi: str
     email: EmailStr
+class OrderRequest(BaseModel):
+    amount: float

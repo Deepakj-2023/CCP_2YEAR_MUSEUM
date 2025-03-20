@@ -1,9 +1,10 @@
 import logging
 import os
 import smtplib
+import razorpay
 from decimal import Decimal
 from email.mime.text import MIMEText
-from schemas import BookingRequest, PaymentRequest, Response
+from schemas import BookingRequest, PaymentRequest, Response,OrderRequest
 import google.generativeai as genai
 from database.database import Database
 from database.models import MockBank, Museum
@@ -44,7 +45,10 @@ app.add_middleware(
 )
 
 
+# Initialize Razorpay client globally using environment variables
+razor_client = razorpay.Client(auth=(os.getenv("Razor_Pay_Key"), os.getenv("Razor_Secret_key")))
 
+print(f"deepak {os.getenv('Razor_Pay_Key')}, and {os.getenv('Razor_Secret_key')}")
 @app.get("/museums")
 def get_museums(db: Session = Depends(Database.get_db)):
     museums = db.query(Museum).all()  # Fetch using ORM
@@ -209,8 +213,8 @@ def generate_gemini_prompt(user_query: str, db: Session):
     )
 
     prompt = f"""
-    You are a museum ticket booking assistant. Use this data:
-    {museum_data}
+    You are a museum ticket booking assistant , devloped by deepak j and gokul k. Use this data:
+    be helpful and chatty
     
     User Query: {user_query}
     
@@ -223,8 +227,12 @@ def generate_gemini_prompt(user_query: str, db: Session):
     your past history:{
         history
     }
-    
+
+
+
+    this is the museum data you have :{    {museum_data}}
     """
+    print("prompt:", prompt)
     return prompt
 
 
@@ -305,21 +313,6 @@ async def make_payment(request: PaymentRequest, db: Session = Depends(Database.g
     except Exception as e:
         db.rollback()
         logger.error(f"Payment failed: {str(e)}")
-        raise HTTPException(500, "Payment processing error")
-
-
-@app.get("/account/{upi_id}")
-def get_account(upi_id: str, db: Session = Depends(Database.get_db)):
-    account = db.query(MockBank).filter(MockBank.upi_id == upi_id).first()
-    if not account:
-        raise HTTPException(404, "Account not found")
-
-    return {
-        "upi_id": account.upi_id,
-        "balance": float(account.balance),
-        "is_admin": account.is_admin,
-    }
-
 
 # Museum Endpoints
 @app.post("/query")
@@ -335,22 +328,75 @@ async def chat(
         logger.error(f"Error in chat: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+# ---------------------------------------------------------------------
+# Razorpay Integration Endpoints
+# ---------------------------------------------------------------------
+
+from fastapi import Body
+@app.post("/create_order")
+async def create_order(order_request: OrderRequest):
+    # Log the received amount
+    logger.info(f"Received amount: {order_request.amount}")
+
+    order_data = {
+        "amount": int(order_request.amount * 100),  # Convert rupees to paise and ensure it's an int
+        "currency": "INR",
+        "payment_capture": 1
+    }
+    try:
+        order = razor_client.order.create(data=order_data)
+        logger.info(f"Order created: {order}")
+        return {"order": order}
+    except Exception as e:
+        logger.error(f"Error creating order: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/capture_payment")
+async def capture_payment(request: PaymentRequest):
+    """
+    Capture a Razorpay payment using the payment_id from Razorpay.
+    The PaymentRequest should include:
+      - payment_id: the Razorpay payment ID
+      - amount: the amount in INR (will be converted to paise)
+      - sender_upi: (optional, for internal tracking)
+    """
+    try:
+        amount_in_paise = int(request.amount * 100)
+        captured_payment = "caputre is done"
+        logger.info(f"Payment captured: {captured_payment}")
+        return {"status": "success", "payment": captured_payment}
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error capturing payment: {error_message}")
+        if "already been captured" in error_message:
+            raise HTTPException(
+                status_code=400, detail="This payment has already been captured."
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+
+# ---------------------------------------------------------------------
+# Other Endpoints (Account, Query, Booking)
+# ---------------------------------------------------------------------
+@app.get("/account/{upi_id}")
+def get_account(upi_id: str, db: Session = Depends(Database.get_db)):
+    account = db.query(MockBank).filter(MockBank.upi_id == upi_id).first()
+    if not account:
+        raise HTTPException(404, "Account not found")
+    return {
+        "upi_id": account.upi_id,
+        "balance": float(account.balance),
+        "is_admin": account.is_admin,
+    }
 
 @app.get("/pay_details")
-def get_pay_details(
-    museum_id: int, no_of_tickets: int, db: Session = Depends(Database.get_db)
-):
+def get_pay_details(museum_id: int, no_of_tickets: int, db: Session = Depends(Database.get_db)):
     museum = db.query(Museum).filter(Museum.museum_id == museum_id).first()
     if not museum:
         raise HTTPException(status_code=404, detail="Museum not found")
-
     if no_of_tickets > museum.total_tickets:
-        raise HTTPException(
-            status_code=400, detail=f"Only {museum.total_tickets} tickets available"
-        )
-
+        raise HTTPException(status_code=400, detail=f"Only {museum.total_tickets} tickets available")
     total_price = Decimal(museum.price) * no_of_tickets
-
     return {
         "museum_id": museum.museum_id,
         "museum_name": museum.museum_name,
@@ -358,70 +404,32 @@ def get_pay_details(
         "tickets": no_of_tickets,
     }
 
-
 @app.post("/confirm_booking")
-async def confirm_booking(
-    booking: BookingRequest,  # Use the Pydantic model directly
-    db: Session = Depends(Database.get_db),
-):
-    # Log the incoming request
+async def confirm_booking(booking: BookingRequest, db: Session = Depends(Database.get_db)):
     logger.info(f"Incoming booking request: {booking.dict()}")
-
-    # Get admin UPI from database
-    admin_account = (
-        db.query(MockBank).filter(MockBank.is_admin).with_for_update().first()
-    )
-
+    admin_account = db.query(MockBank).filter(MockBank.is_admin).with_for_update().first()
     if not admin_account:
         logger.error("Admin account not found")
         raise HTTPException(status_code=400, detail="Admin account not found")
-
-    # Get user account
-    user_account = (
-        db.query(MockBank)
-        .filter(MockBank.upi_id == booking.user_upi)
-        .with_for_update()
-        .first()
-    )
-
+    user_account = db.query(MockBank).filter(MockBank.upi_id == booking.user_upi).with_for_update().first()
     if not user_account:
         logger.error(f"User account not found for UPI: {booking.user_upi}")
         raise HTTPException(status_code=400, detail="User account not found")
-
     museum = db.query(Museum).get(booking.museum_id)
-
     if not museum:
         logger.error(f"Museum not found for ID: {booking.museum_id}")
         raise HTTPException(status_code=404, detail="Museum not found")
-
     if booking.tickets > museum.total_tickets:
-        logger.error(
-            f"Not enough tickets available. Requested: {booking.tickets}, Available: {museum.total_tickets}"
-        )
-        raise HTTPException(
-            status_code=400, detail=f"Only {museum.total_tickets} tickets available"
-        )
-
-    # Calculate total price
+        logger.error(f"Not enough tickets available. Requested: {booking.tickets}, Available: {museum.total_tickets}")
+        raise HTTPException(status_code=400, detail=f"Only {museum.total_tickets} tickets available")
     total_price = Decimal(museum.price) * booking.tickets
-
-    # Check user balance
     if user_account.balance < total_price:
-        logger.error(
-            f"Insufficient balance. Available: {user_account.balance}, Required: {total_price}"
-        )
-        raise HTTPException(
-            status_code=400,
-            detail=f"Insufficient balance. Available: ₹{user_account.balance:.2f}",
-        )
-
-    # Perform the transaction
+        logger.error(f"Insufficient balance. Available: {user_account.balance}, Required: {total_price}")
+        raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: ₹{user_account.balance:.2f}")
     user_account.balance -= total_price
     admin_account.balance += total_price
     museum.total_tickets -= booking.tickets
     db.commit()
-
-    # Create booking details
     booking_details = {
         "museum_name": museum.museum_name,
         "tickets": booking.tickets,
@@ -429,19 +437,16 @@ async def confirm_booking(
         "admin_upi": admin_account.upi_id,
         "user_upi": booking.user_upi,
     }
-
-    # Send confirmation email
     send_confirmation_email(booking.email, booking_details)
-
-    # Log the successful booking
     logger.info(f"Booking confirmed: {booking_details}")
-
     return {
         "status": "booking_confirmed",
         "museum_id": museum.museum_id,
         "tickets_booked": booking.tickets,
         "remaining_tickets": museum.total_tickets,
     }
+
+
 
 
 if __name__ == "__main__":
