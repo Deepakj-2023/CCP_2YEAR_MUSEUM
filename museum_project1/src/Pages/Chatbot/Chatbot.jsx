@@ -140,6 +140,7 @@ function Chatbot() {
     };
 
     return (
+        <div className="chat-container-top">
         <div className="chat-container">
             <header className="chat-header">
                 <Museum size={24} />
@@ -148,7 +149,7 @@ function Chatbot() {
 
             <main className="chat-messages">
                 {messages.map((message, index) => (
-                    <div key={index} className={`message-container ${message.isBot ? "align-left" : "align-right"}`}>
+                    <div key={index} className={`${message.isBot ? "box-align-left" : "box-align-right"}`}>
                         <div className={`message-bubble ${message.isBot ? "bot-message" : "user-message"}`}>
                             {message.text}
                         </div>
@@ -170,6 +171,7 @@ function Chatbot() {
                     <Send size={20} />
                 </button>
             </footer>
+        </div>
         </div>
     );
 }
