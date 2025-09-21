@@ -331,8 +331,6 @@ async def chat(
 # ---------------------------------------------------------------------
 # Razorpay Integration Endpoints
 # ---------------------------------------------------------------------
-
-from fastapi import Body
 @app.post("/create_order")
 async def create_order(order_request: OrderRequest):
     # Log the received amount
@@ -361,7 +359,6 @@ async def capture_payment(request: PaymentRequest):
       - sender_upi: (optional, for internal tracking)
     """
     try:
-        amount_in_paise = int(request.amount * 100)
         captured_payment = "caputre is done"
         logger.info(f"Payment captured: {captured_payment}")
         return {"status": "success", "payment": captured_payment}

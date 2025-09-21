@@ -21,7 +21,7 @@ class Database:
             password = os.getenv("PASSWORD")
             print("USER IS :",user," password:",password)
             database_name = "museum_bookings_db"
-            database_url = f"postgresql://postgres:Gokul_2005@localhost/{database_name}"
+            database_url = f"postgresql://{user}:{password}@localhost/{database_name}"
             Database._engine = create_engine(
                 database_url,echo=False, pool_size = 10, max_overflow = 20
             )
@@ -33,7 +33,6 @@ class Database:
     def init_db():
         """to initalize the database
         """
-        
         if not database_exists(Database.get_engine().url):
             create_database(Database.get_engine().url)
 
